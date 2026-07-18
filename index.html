@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Peach Budget" />
+<meta name="theme-color" content="#E07856" />
+<title>Hopping Peach Budget</title>
+<style>
+  :root{
+    --terra:#E07856; --terra-d:#c45f3f; --peach:#F4A988; --peach-l:#FCE8DC;
+    --bg:#fbf6f2; --card:#ffffff; --ink:#2c2420; --muted:#9a8a80;
+    --green:#1e7e34; --green-l:#d9ead3; --red:#c0392b; --red-l:#fbe3e1;
+    --line:#efe2d8; --shadow:0 1px 3px rgba(120,80,60,.10),0 6px 18px rgba(120,80,60,.06);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--bg); color:var(--ink);
+    padding:0 0 90px 0; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:520px;margin:0 auto}
+  /* header */
+  header{
+    background:linear-gradient(135deg,var(--terra),var(--terra-d));
+    color:#fff; padding:calc(env(safe-area-inset-top) + 16px) 18px 16px;
+    position:sticky; top:0; z-index:30; box-shadow:0 2px 10px rgba(120,60,40,.18);
+  }
+  .h-top{display:flex;align-items:center;gap:10px}
+  .h-top .peach{font-size:26px;line-height:1}
+  .h-top h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.2px}
+  .month{display:flex;align-items:center;gap:8px;margin-top:10px}
+  .month input{
+    background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.35);
+    color:#fff; font-size:14px; font-weight:600; padding:6px 10px; border-radius:9px; width:160px;
+  }
+  .month input::placeholder{color:rgba(255,255,255,.7)}
+  .sync-pill{margin-left:auto;font-size:11px;font-weight:700;padding:4px 9px;border-radius:20px;background:rgba(255,255,255,.2)}
+  .sync-pill.local{background:rgba(255,255,255,.2)}
+  .sync-pill.live{background:#1e7e34}
+  /* summary */
+  .summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px}
+  .scard{background:var(--card);border-radius:14px;padding:12px 13px;box-shadow:var(--shadow)}
+  .scard .lab{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+  .scard .val{font-size:21px;font-weight:800;margin-top:3px}
+  .scard.wide{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between}
+  .scard.hero{background:linear-gradient(135deg,#fff,#fff6f0);border:1px solid var(--line)}
+  .val.green{color:var(--green)} .val.red{color:var(--red)}
+  /* progress bar */
+  .bar{height:9px;border-radius:6px;background:var(--peach-l);overflow:hidden;margin-top:8px}
+  .bar > span{display:block;height:100%;background:var(--terra);border-radius:6px;transition:width .3s}
+  .bar > span.over{background:var(--red)}
+  /* sections */
+  section{margin:8px 14px 0}
+  .sec-head{display:flex;align-items:center;gap:8px;margin:16px 2px 8px}
+  .sec-head h2{font-size:13px;margin:0;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--terra-d)}
+  .sec-head .tot{margin-left:auto;font-size:13px;font-weight:800;color:var(--ink)}
+  .list{background:var(--card);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+  .row{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:none}
+  .row.paid{background:var(--green-l)}
+  .row .nm{flex:1;min-width:0}
+  .row .nm .t{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .nm .s{font-size:12px;color:var(--muted);margin-top:1px}
+  .row .amt{font-size:15px;font-weight:700;white-space:nowrap}
+  .row.paid .nm .t{text-decoration:line-through;color:var(--muted)}
+  /* paid check */
+  .check{width:30px;height:30px;border-radius:9px;border:2px solid var(--peach);display:flex;align-items:center;justify-content:center;flex:none;background:#fff;font:inherit;font-size:17px;color:transparent;cursor:pointer;padding:0}
+  .check.on{background:var(--green);border-color:var(--green);color:#fff}
+  /* goal row */
+  .grow{padding:12px 14px;border-bottom:1px solid var(--line)}
+  .grow:last-child{border-bottom:none}
+  .grow .top{display:flex;justify-content:space-between;align-items:baseline}
+  .grow .top .t{font-size:15px;font-weight:600}
+  .grow .top .s{font-size:12px;color:var(--muted);font-weight:600}
+  /* add button */
+  .addbtn{display:block;width:100%;text-align:center;padding:12px;background:none;border:none;color:var(--terra-d);font-weight:700;font-size:14px;cursor:pointer}
+  /* fab area / footer note */
+  .note{margin:18px 16px 0;font-size:12px;color:var(--muted);line-height:1.5;text-align:center}
+  /* modal */
+  .ov{position:fixed;inset:0;background:rgba(40,25,18,.45);display:none;align-items:flex-end;justify-content:center;z-index:60}
+  .ov.show{display:flex}
+  .sheet{background:#fff;width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:18px 18px calc(env(safe-area-inset-bottom) + 18px);animation:up .22s ease}
+  @keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:translateY(0);opacity:1}}
+  .sheet h3{margin:2px 0 14px;font-size:17px}
+  .fld{margin-bottom:12px}
+  .fld label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+  .fld input{width:100%;padding:12px;border:1.5px solid var(--line);border-radius:11px;font-size:16px;background:#fdfaf8}
+  .fld input:focus{outline:none;border-color:var(--peach)}
+  .sheet .actions{display:flex;gap:10px;margin-top:6px}
+  .btn{flex:1;padding:13px;border-radius:12px;border:none;font-size:15px;font-weight:700;cursor:pointer}
+  .btn.primary{background:var(--terra);color:#fff}
+  .btn.ghost{background:#f3eae3;color:var(--ink)}
+  .btn.danger{background:var(--red-l);color:var(--red);flex:0 0 auto;padding:13px 16px}
+  /* pin screen */
+  .pin{position:fixed;inset:0;background:linear-gradient(135deg,var(--terra),var(--terra-d));display:flex;align-items:center;justify-content:center;z-index:90;flex-direction:column;color:#fff;padding:24px}
+  .pin .peach{font-size:54px}
+  .pin h2{margin:14px 0 4px;font-size:22px}
+  .pin p{margin:0 0 20px;opacity:.85;font-size:14px}
+  .pin input{font-size:24px;letter-spacing:8px;text-align:center;width:170px;padding:12px;border-radius:14px;border:none}
+  .pin .err{color:#ffd9d2;font-size:13px;height:18px;margin-top:10px;font-weight:600}
+  .tiny{font-size:11px}
+</style>
+</head>
+<body>
+
+<!-- ============ CONFIG: edit this one block after you set up the free backend ============ -->
+<script>
+window.PEACH_CONFIG = {
+  // 1) SHARED PIN — pick any code you and your wife will use to open the app.
+  passcode: "328",
+
+  // 2) FIREBASE — leave the apiKey as "PASTE_HERE" to run in local-only mode (no sync yet).
+  //    The setup guide shows exactly where to copy each value from.
+  firebase: {
+    apiKey:      "PASTE_HERE",
+    authDomain:  "PASTE_HERE",
+    databaseURL: "PASTE_HERE",
+    projectId:   "PASTE_HERE",
+    appId:       "PASTE_HERE"
+  }
+};
+</script>
+<!-- =================================================================================== -->
+
+<!-- PIN gate -->
+<div class="pin" id="pin">
+  <div class="peach">🍑</div>
+  <h2>Hopping Peach Budget</h2>
+  <p>Enter your shared code</p>
+  <input id="pinInput" type="tel" inputmode="numeric" maxlength="8" autocomplete="off" />
+  <div class="err" id="pinErr"></div>
+</div>
+
+<div class="wrap" id="app" style="display:none">
+  <header>
+    <div class="h-top">
+      <span class="peach">🍑</span>
+      <h1>328 Hopping Peach Budget</h1>
+      <span class="sync-pill local" id="syncPill">LOCAL</span>
+    </div>
+    <div class="month">
+      <input id="monthInput" placeholder="Budget month" />
+    </div>
+  </header>
+
+  <!-- summary -->
+  <div class="summary" id="summary"></div>
+
+  <!-- sections injected here -->
+  <div id="sections"></div>
+
+  <p class="note">
+    Tap any row to edit. Tap the box on a bill to mark it paid.<br/>
+    <span class="tiny" id="modeNote"></span>
+  </p>
+</div>
+
+<!-- edit modal -->
+<div class="ov" id="ov">
+  <div class="sheet">
+    <h3 id="mTitle">Edit</h3>
+    <div id="mFields"></div>
+    <div class="actions">
+      <button class="btn ghost" id="mCancel">Cancel</button>
+      <button class="btn danger" id="mDelete">Delete</button>
+      <button class="btn primary" id="mSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+const CFG = window.PEACH_CONFIG;
+const LS = {
+  get:k=>{try{return localStorage.getItem(k);}catch(e){return null;}},
+  set:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}}
+};
+const usd = n => "$" + (Math.round(+n||0)).toLocaleString("en-US");
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+
+// ---------- default (your real budget) ----------
+const DEFAULT = {
+  month: "June 2026",
+  income: [
+    {id:uid(), item:"Total Safety check 1", date:"", amount:4700},
+    {id:uid(), item:"Total Safety check 2", date:"", amount:5200},
+    {id:uid(), item:"Other", date:"", amount:0},
+  ],
+  bills: [
+    {id:uid(), item:"Union Home", date:"", amount:5250, paid:false},
+    {id:uid(), item:"PEC Electric", date:"", amount:250, paid:false},
+    {id:uid(), item:"Centerpoint Gas", date:"", amount:125, paid:false},
+    {id:uid(), item:"Verizon Cell", date:"", amount:225, paid:false},
+    {id:uid(), item:"Kissing Tree", date:"", amount:255, paid:false},
+    {id:uid(), item:"Car payment", date:"", amount:389, paid:false},
+    {id:uid(), item:"Car Insurance", date:"", amount:270, paid:false},
+    {id:uid(), item:"Visa (Family/food/etc)", date:"", amount:750, paid:false},
+    {id:uid(), item:"Misc Repairs/Maint", date:"", amount:100, paid:false},
+    {id:uid(), item:"Culligan", date:"", amount:50, paid:false},
+    {id:uid(), item:"Cable/TV Spectrum", date:"", amount:180, paid:false},
+    {id:uid(), item:"Water/Trash", date:"", amount:275, paid:false},
+    {id:uid(), item:"Generac", date:"", amount:75, paid:false},
+    {id:uid(), item:"Lawn/Pest/other", date:"", amount:250, paid:false},
+    {id:uid(), item:"Southwest trips (average)", date:"", amount:750, paid:false},
+  ],
+  savings: [
+    {id:uid(), item:"Emergency Fund", date:"", amount:0},
+    {id:uid(), item:"Retirement / Investing", date:"", amount:0},
+    {id:uid(), item:"General Savings", date:"", amount:0},
+  ],
+  goals: [
+    {id:uid(), item:"Emergency Fund", target:10000, saved:0},
+    {id:uid(), item:"Vacation / Trips", target:5000, saved:0},
+    {id:uid(), item:"Home Projects", target:3000, saved:0},
+  ]
+};
+
+let state = null;
+let storage = null; // {save(state)}
+let suppress = false;
+
+// ---------- storage layer ----------
+const hasFB = CFG.firebase && CFG.firebase.apiKey && CFG.firebase.apiKey !== "PASTE_HERE";
+
+async function initStorage(onRemote){
+  if(hasFB){
+    try{
+      const appMod = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+      const dbMod  = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js");
+      const auMod  = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+      const app = appMod.initializeApp(CFG.firebase);
+      const auth = auMod.getAuth(app);
+      await auMod.signInAnonymously(auth);
+      const db = dbMod.getDatabase(app);
+      const r = dbMod.ref(db, "budget");
+      dbMod.onValue(r, snap=>{
+        const v = snap.val();
+        if(v){ onRemote(v); }
+        else { dbMod.set(r, DEFAULT); }
+      });
+      setSync("live");
+      return { save: (s)=> dbMod.set(r, s) };
+    }catch(e){
+      console.warn("Firebase failed, using local:", e);
+    }
+  }
+  // local fallback
+  setSync("local");
+  return {
+    save:(s)=>{ LS.set("peachBudget", JSON.stringify(s)); }
+  };
+}
+function loadLocal(){
+  try{ const s = LS.get("peachBudget"); if(s) return JSON.parse(s); }catch(e){}
+  return null;
+}
+function setSync(mode){
+  const p = document.getElementById("syncPill");
+  if(mode==="live"){ p.textContent="LIVE SYNC"; p.className="sync-pill live"; }
+  else { p.textContent="LOCAL"; p.className="sync-pill local"; }
+  document.getElementById("modeNote").textContent =
+    mode==="live" ? "Live sync on — changes appear on both phones."
+                  : "Local mode — finish the quick setup to sync with your wife.";
+}
+
+// ---------- persistence ----------
+let saveT=null;
+function persist(){
+  if(suppress) return;
+  state.updated = Date.now();
+  if(saveT) clearTimeout(saveT);
+  saveT = setTimeout(()=> storage && storage.save(state), 250);
+}
+
+// ---------- calculations ----------
+const sum = a => a.reduce((t,x)=>t+(+x.amount||0),0);
+function calc(){
+  const inc = sum(state.income), exp = sum(state.bills), sav = sum(state.savings);
+  const cash = inc-exp-sav;
+  const pct = inc>0 ? exp/inc : 0;
+  const paidCount = state.bills.filter(b=>b.paid).length;
+  const toPay = state.bills.filter(b=>!b.paid).reduce((t,b)=>t+(+b.amount||0),0);
+  return {inc,exp,sav,cash,pct,paidCount,toPay};
+}
+
+// ---------- rendering ----------
+function render(){
+  document.getElementById("monthInput").value = state.month||"";
+  const c = calc();
+  const overPct = Math.min(c.pct,1)*100;
+  document.getElementById("summary").innerHTML = `
+    <div class="scard"><div class="lab">Income</div><div class="val">${usd(c.inc)}</div></div>
+    <div class="scard"><div class="lab">Expenses</div><div class="val">${usd(c.exp)}</div></div>
+    <div class="scard hero wide">
+      <div><div class="lab">Cash Left Over</div>
+        <div class="val ${c.cash<0?'red':'green'}">${usd(c.cash)}</div></div>
+      <div style="text-align:right">
+        <div class="lab">Income used</div>
+        <div class="val ${c.pct>1?'red':''}" style="font-size:18px">${Math.round(c.pct*100)}%</div>
+      </div>
+    </div>
+    <div class="scard wide" style="display:block">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-weight:700">
+        <span>${c.paidCount} of ${state.bills.length} bills paid</span>
+        <span>Still to pay: <b style="color:var(--terra-d)">${usd(c.toPay)}</b></span>
+      </div>
+      <div class="bar"><span class="${c.pct>1?'over':''}" style="width:${overPct}%"></span></div>
+    </div>
+    <div class="scard"><div class="lab">Savings</div><div class="val">${usd(c.sav)}</div></div>
+    <div class="scard"><div class="lab">Goals</div><div class="val" style="font-size:18px">${state.goals.length} active</div></div>
+  `;
+
+  const S = document.getElementById("sections");
+  S.innerHTML = "";
+  S.appendChild(billSection());
+  S.appendChild(listSection("Monthly Income","income",false));
+  S.appendChild(listSection("Monthly Savings","savings",false));
+  S.appendChild(goalSection());
+}
+
+function secHead(title, total){
+  const h = document.createElement("div");
+  h.className="sec-head";
+  h.innerHTML = `<h2>${title}</h2>` + (total!=null?`<span class="tot">${usd(total)}</span>`:"");
+  return h;
+}
+
+function billSection(){
+  const sec = document.createElement("section");
+  sec.appendChild(secHead("Monthly Bills", sum(state.bills)));
+  const list = document.createElement("div"); list.className="list";
+  state.bills.forEach(b=>{
+    const row = document.createElement("div");
+    row.className = "row"+(b.paid?" paid":"");
+    row.innerHTML = `
+      <button type="button" class="check ${b.paid?'on':''}" aria-label="Mark ${esc(b.item)} ${b.paid?'unpaid':'paid'}" aria-pressed="${b.paid?'true':'false'}">✓</button>
+      <div class="nm"><div class="t">${esc(b.item)}</div>${b.date?`<div class="s">Due ${esc(b.date)}</div>`:""}</div>
+      <div class="amt">${usd(b.amount)}</div>`;
+    row.querySelector(".check").addEventListener("click",(e)=>{
+      e.stopPropagation(); b.paid=!b.paid; persist(); render();
+    });
+    row.querySelector(".nm").addEventListener("click",()=>openEdit("bills",b));
+    row.querySelector(".amt").addEventListener("click",()=>openEdit("bills",b));
+    list.appendChild(row);
+  });
+  const add = document.createElement("button");
+  add.className="addbtn"; add.textContent="+ Add bill";
+  add.onclick=()=>openEdit("bills",null);
+  list.appendChild(add);
+  sec.appendChild(list);
+  return sec;
+}
+
+function listSection(title, key){
+  const sec = document.createElement("section");
+  sec.appendChild(secHead(title, sum(state[key])));
+  const list = document.createElement("div"); list.className="list";
+  state[key].forEach(it=>{
+    const row = document.createElement("div");
+    row.className="row";
+    row.innerHTML = `
+      <div class="nm"><div class="t">${esc(it.item)}</div>${it.date?`<div class="s">${esc(it.date)}</div>`:""}</div>
+      <div class="amt">${usd(it.amount)}</div>`;
+    row.onclick=()=>openEdit(key,it);
+    list.appendChild(row);
+  });
+  const add = document.createElement("button");
+  add.className="addbtn"; add.textContent="+ Add "+(key==="income"?"income":"savings");
+  add.onclick=()=>openEdit(key,null);
+  list.appendChild(add);
+  sec.appendChild(list);
+  return sec;
+}
+
+function goalSection(){
+  const sec = document.createElement("section");
+  sec.appendChild(secHead("Savings Goals", null));
+  const list = document.createElement("div"); list.className="list";
+  state.goals.forEach(g=>{
+    const pct = g.target>0 ? Math.min(g.saved/g.target,1) : 0;
+    const row = document.createElement("div");
+    row.className="grow";
+    row.innerHTML = `
+      <div class="top"><span class="t">${esc(g.item)}</span>
+        <span class="s">${usd(g.saved)} / ${usd(g.target)} · ${Math.round(pct*100)}%</span></div>
+      <div class="bar"><span style="width:${pct*100}%"></span></div>`;
+    row.onclick=()=>openEdit("goals",g);
+    list.appendChild(row);
+  });
+  const add = document.createElement("button");
+  add.className="addbtn"; add.textContent="+ Add goal";
+  add.onclick=()=>openEdit("goals",null);
+  list.appendChild(add);
+  sec.appendChild(list);
+  return sec;
+}
+
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));}
+
+// ---------- modal ----------
+let editKey=null, editItem=null;
+function openEdit(key, item){
+  editKey=key; editItem=item;
+  const isNew = !item;
+  document.getElementById("mTitle").textContent =
+    (isNew?"Add ":"Edit ") + ({bills:"Bill",income:"Income",savings:"Savings",goals:"Goal"}[key]);
+  const F = document.getElementById("mFields"); F.innerHTML="";
+  const fields = key==="goals"
+    ? [["item","Name","text"],["target","Target $","number"],["saved","Saved $","number"]]
+    : (key==="bills"
+        ? [["item","Name","text"],["date","Due date","text"],["amount","Amount $","number"]]
+        : [["item","Name","text"],["date","Date","text"],["amount","Amount $","number"]]);
+  fields.forEach(([k,lab,type])=>{
+    const v = item ? (item[k]??"") : "";
+    F.insertAdjacentHTML("beforeend",
+      `<div class="fld"><label>${lab}</label>
+       <input data-k="${k}" type="${type}" ${type==='number'?'inputmode="decimal"':''} value="${esc(v)}" /></div>`);
+  });
+  document.getElementById("mDelete").style.display = isNew ? "none":"";
+  document.getElementById("ov").classList.add("show");
+  setTimeout(()=>{const i=F.querySelector("input");i&&i.focus();},80);
+}
+function closeModal(){ document.getElementById("ov").classList.remove("show"); }
+document.getElementById("mCancel").onclick=closeModal;
+document.getElementById("ov").addEventListener("click",e=>{ if(e.target.id==="ov") closeModal(); });
+document.getElementById("mSave").onclick=()=>{
+  const data={};
+  document.querySelectorAll("#mFields input").forEach(i=>{
+    data[i.dataset.k] = i.type==="number" ? (parseFloat(i.value)||0) : i.value.trim();
+  });
+  if(editItem){ Object.assign(editItem,data); }
+  else { data.id=uid(); if(editKey==="bills")data.paid=false; state[editKey].push(data); }
+  persist(); render(); closeModal();
+};
+document.getElementById("mDelete").onclick=()=>{
+  if(editItem){ state[editKey]=state[editKey].filter(x=>x.id!==editItem.id); persist(); render(); }
+  closeModal();
+};
+document.getElementById("monthInput").addEventListener("input",e=>{ state.month=e.target.value; persist(); });
+
+// ---------- boot ----------
+function startApp(){
+  document.getElementById("app").style.display="";
+  state = loadLocal() || JSON.parse(JSON.stringify(DEFAULT));
+  render();
+  initStorage((remote)=>{
+    suppress=true;
+    state = remote;
+    render();
+    suppress=false;
+  }).then(s=>{ storage=s; });
+}
+
+// ---------- PIN gate ----------
+(function gate(){
+  const code = (CFG.passcode||"").toString();
+  const KEY="peachUnlocked";
+  if(!code || LS.get(KEY)==="1"){
+    document.getElementById("pin").style.display="none";
+    startApp(); return;
+  }
+  const inp=document.getElementById("pinInput"), err=document.getElementById("pinErr");
+  inp.focus();
+  inp.addEventListener("input",()=>{
+    if(inp.value.length>=code.length){
+      if(inp.value===code){
+        LS.set(KEY,"1");
+        document.getElementById("pin").style.display="none";
+        startApp();
+      } else { err.textContent="Wrong code, try again"; inp.value=""; }
+    }
+  });
+})();
+</script>
+</body>
+</html>
