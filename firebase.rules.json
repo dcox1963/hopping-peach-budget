@@ -1,0 +1,8 @@
+{
+  "rules": {
+    "budget": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
+  }
+}
